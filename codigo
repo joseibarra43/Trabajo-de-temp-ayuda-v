@@ -1,0 +1,62 @@
+#include <Wire.h> 
+#include <LiquidCrystal_I2C.h>
+
+// Configuración del LCD I2C
+LiquidCrystal_I2C lcd(0x27, 16, 2); // Dirección I2C para el LCD (0x27 es común)
+
+// Definición de Pines
+const int pinSensorHumedad = A0; // El sensor está conectado al pin A0
+
+// Calibración del Sensor
+const int VALOR_SECO = 700;   // Ajustar este valor (ej. aire seco)
+const int VALOR_HUMEDO = 350; // Ajustar este valor (ej. agua)
+
+void setup() {
+  // Inicializa la comunicación serial para depuración
+  Serial.begin(9600);
+  Serial.println("Iniciando sistema de medición de humedad...");
+  
+  // Inicializa el LCD
+  lcd.init();
+  lcd.backlight();
+  lcd.clear();
+  lcd.print("Iniciando...");
+  
+  // Configura el pin del sensor como entrada
+  pinMode(pinSensorHumedad, INPUT);
+}
+
+void loop() {
+  // 1. Lectura del valor analógico del sensor
+  int lecturaAnalogica = analogRead(pinSensorHumedad);
+  
+  // 2. Mapeo y Conversión a Porcentaje
+  int porcentajeHumedad = map(lecturaAnalogica, VALOR_HUMEDO, VALOR_SECO, 100, 0);
+  
+  // Ajuste de límites (Clamp) para asegurar que el valor esté entre 0 y 100
+  if (porcentajeHumedad > 100) {
+    porcentajeHumedad = 100;
+  }
+  if (porcentajeHumedad < 0) {
+    porcentajeHumedad = 0;
+  }
+  
+  // 3. Muestra de datos en el LCD
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Humedad Planta:");
+  
+  lcd.setCursor(5, 1);
+  lcd.print(porcentajeHumedad);
+  lcd.print(" %");
+
+  // 4. Muestra de datos en el Monitor Serial (para depuración)
+  Serial.print("Lectura Analoga: ");
+  Serial.print(lecturaAnalogica);
+  Serial.print(" -> Humedad: ");
+  Serial.print(porcentajeHumedad);
+  Serial.println(" %");
+
+  // Espera 2 segundos antes de la próxima lectura
+  delay(2000);
+}
